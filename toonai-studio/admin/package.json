@@ -1,0 +1,1 @@
+{"name":"toonai-admin","private":true,"scripts":{"dev":"vite"},"dependencies":{"vite":"latest","typescript":"latest","react":"latest","react-dom":"latest"},"devDependencies":{}}
