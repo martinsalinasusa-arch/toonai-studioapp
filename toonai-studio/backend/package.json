@@ -1,0 +1,11 @@
+{
+  "name": "toonai-backend",
+  "private": true,
+  "scripts": {"dev":"tsx watch src/server.ts","worker":"tsx src/worker.ts","build":"tsc","start":"node dist/server.js"},
+  "dependencies": {
+    "@fastify/cors":"latest","@fastify/jwt":"latest","@fastify/multipart":"latest","@prisma/client":"latest",
+    "bcryptjs":"latest","bullmq":"latest","fastify":"latest","zod":"latest","ioredis":"latest",
+    "@aws-sdk/client-s3":"latest","@aws-sdk/s3-request-presigner":"latest"
+  },
+  "devDependencies":{"@types/node":"latest","prisma":"latest","tsx":"latest","typescript":"latest"}
+}
