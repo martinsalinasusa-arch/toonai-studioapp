@@ -1,0 +1,2 @@
+import React from "react";import{createRoot}from"react-dom/client";import"../style.css";
+function App(){return <main><h1>ToonAI Studio Admin</h1><p>Secure this dashboard behind admin JWT/SSO in production.</p><div className="grid">{["Users","Projects","Generation Jobs","Purchases","Subscriptions","Credit Usage","Failures","Revenue"].map(x=><div className="card"><b>{x}</b><span>Connect to admin API</span></div>)}</div></main>}createRoot(document.getElementById("root")!).render(<App/>);
