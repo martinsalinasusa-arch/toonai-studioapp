@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobStatus { QUEUED PROCESSING COMPLETED FAILED REFUNDED }
+enum ProjectStatus { DRAFT GENERATING COMPLETED FAILED }
+enum PurchaseStatus { PENDING COMPLETED FAILED CANCELLED REFUNDED }
+enum SubscriptionStatus { ACTIVE PAUSED CANCELLED EXPIRED }
+enum Role { USER ADMIN }
+
+model User {
+  id             String   @id @default(cuid())
+  email          String?  @unique
+  phone          String?  @unique
+  passwordHash   String?
+  name           String?
+  role           Role     @default(USER)
+  verifiedAt     DateTime?
+  freeCreditsGranted Boolean @default(false)
+  credits        CreditLedger[]
+  projects       Project[]
+  jobs            GenerationJob[]
+  purchases      Purchase[]
+  subscriptions  Subscription[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CreditLedger {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int
+  type        String
+  referenceId String?
+  balance     Int
+  createdAt   DateTime @default(now())
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+}
+
+model CreditProduct {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  credits     Int
+  pricePaise  Int
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  monthlyCredits Int
+  pricePaise  Int
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id          String @id @default(cuid())
+  userId      String
+  planId      String
+  providerPurchaseToken String? @unique
+  status      SubscriptionStatus
+  startedAt   DateTime @default(now())
+  expiresAt   DateTime?
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        SubscriptionPlan @relation(fields: [planId], references: [id])
+}
+
+model Purchase {
+  id             String @id @default(cuid())
+  userId         String
+  productSku     String
+  purchaseToken  String @unique
+  creditsGranted Int @default(0)
+  amountPaise    Int?
+  currency       String @default("INR")
+  status         PurchaseStatus @default(PENDING)
+  rawProviderRef String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          String @id @default(cuid())
+  userId      String
+  title       String
+  prompt      String?
+  durationSec Int?
+  aspectRatio String?
+  style       String?
+  status      ProjectStatus @default(DRAFT)
+  thumbnailUrl String?
+  outputUrl   String?
+  watermarkFree Boolean @default(false)
+  scenes      Scene[]
+  jobs        GenerationJob[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+}
+
+model Scene {
+  id          String @id @default(cuid())
+  projectId   String
+  sortOrder   Int
+  prompt      String
+  durationSec Int
+  character   String?
+  background  String?
+  camera      String?
+  dialogue    String?
+  voice       String?
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@index([projectId, sortOrder])
+}
+
+model GenerationJob {
+  id          String @id @default(cuid())
+  userId      String
+  projectId   String
+  status      JobStatus @default(QUEUED)
+  stage       String @default("queued")
+  progress    Int @default(0)
+  reservedCredits Int
+  error       String?
+  providerJobId String?
+  outputKey   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+}
+
+model AdminAudit {
+  id        String @id @default(cuid())
+  adminId   String
+  action    String
+  targetId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
